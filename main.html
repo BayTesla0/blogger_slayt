@@ -1,0 +1,217 @@
+<!-- Resim Galerisi Başlangıcı -->
+<style>
+/* Galeri ana kapsayıcısı */
+.image-gallery {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Galerinin maksimum genişliği */
+    margin: 20px auto;
+    border: 2px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #f9f9f9;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* Resimlerin görüntülendiği alan */
+.gallery-image-container {
+    position: relative;
+    text-align: center;
+}
+
+.gallery-image {
+    max-width: 100%;
+    height: auto;
+    display: none; /* Başlangıçta tüm resimleri gizle */
+}
+
+.gallery-image.active {
+    display: block; /* Sadece aktif olan resmi göster */
+}
+
+/* İleri ve Geri butonları */
+.prev-btn, .next-btn {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white; 
+    border: none;
+    padding: 10px 15px;
+    font-size: 18px;
+    border-radius: 5px;
+    user-select: none; /* Buton metninin seçilmesini engeller */
+}
+
+.prev-btn {
+    left: 15px;
+}
+
+.next-btn {
+    right: 15px;
+}
+
+.prev-btn:hover, .next-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Resim açıklaması */
+.image-description {
+    text-align: center;
+    padding: 15px;
+    font-size: 16px;
+    color: #555;
+    font-family: sans-serif;
+}
+
+/* Büyüt butonu */
+.zoom-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.zoom-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Büyütülmüş resim (Lightbox) */
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.lightbox-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+</style>
+
+<div class="image-gallery">
+    <div class="gallery-image-container">
+        <!-- Resimler buraya JavaScript ile eklenecek -->
+    </div>
+    <div class="image-description">
+        <!-- Resim açıklamaları buraya JavaScript ile eklenecek -->
+    </div>
+    <button class="prev-btn" onclick="changeImage(-1)">&#10094; Geri</button>
+    <button class="next-btn" onclick="changeImage(1)">İleri &#10095;</button>
+</div>
+
+<!-- Büyütülmüş resim için Lightbox -->
+<div id="myLightbox" class="lightbox">
+    <span class="close-btn" onclick="closeLightbox()">&times;</span>
+    <img class="lightbox-content" id="lightboxImage">
+</div>
+
+<script>
+// --- BURAYA KENDİ RESİM BİLGİLERİNİZİ EKLEYİN ---
+const images = [
+    {
+        url: "https://blogger.googleusercontent.com/img/a/AVvXsEi1Id4-gnKhhVJr9Cqzy9dWWD-EqKzJsn8Thu4LM-UBzKN-BbcGrGHxc06ZF5sCGR3C_vSsLYt00K96B4E7y0-XF2SRk7JX-_kBXKkqk56TdfKDougpcSOxaMmMDbjfErpocCuhUTzmeIpLrie9dcstxClrj--I71bC0E-7--QS-DT9oKsrlsfDCA3nkg",
+        description: "büno 1"
+    },
+    {
+        url: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgTLbd8W2d-_dHPbCzZBkckw-6mTWRHBMdTwDbZ1uXDzsoXBdsePeRk6jLhGQMUYZZ-j8U3YlLfxaPgbyMwRDa1m7Xlh5j3eGWJrAR8fCGfiOgpsuloV9vtl_jCSZZxqrzzxzPoYyyl2KibCTKH3IqWquvLQ2E1A7_HG0_7nDTZHYhhNJnyhOIDhh8Hyw/s1600/WhatsApp%20Image%202023-04-29%20at%2020.51.50.jpeg",
+        description: "büno 2"
+    },
+    {
+        url: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgZ4xlePkztpelimr26-N7uRSVZwGHCWMEJL13mDkH1-OkULplTz5qyo9rFmpvul0SC6GZvresHRLzqVUUgFymdUvrotxdW7Ifwkn2VJ_SPWu5Sv9NCMk_rWCvRRo-GQyyscsnFY9iO_tJMd6wuPCcCTVOPFB_f6tS9nXs53I25em9NUUKWboh59rAPMw/s1920/vlcsnap-2023-04-29-11h25m33s560.png",
+        description: "büno 3."
+    }
+    // İstediğiniz kadar resim ekleyebilirsiniz.
+    // Yeni resim eklemek için yukarıdaki gibi virgül koyup yeni bir {} bloğu ekleyin:
+    // ,{
+    //    url: "YENI_RESIM_URL_ADRESI",
+    //    description: "Yeni resmin açıklaması."
+    // }
+];
+// --- RESİM BİLGİLERİNİ EKLEYECEĞİNİZ ALANIN SONU ---
+
+let currentImageIndex = 0;
+const galleryContainer = document.querySelector('.gallery-image-container');
+const descriptionContainer = document.querySelector('.image-description');
+const lightbox = document.getElementById('myLightbox');
+const lightboxImg = document.getElementById('lightboxImage');
+
+// Resimleri ve açıklamaları oluştur
+function initializeGallery() {
+    let galleryHTML = '';
+    images.forEach((image, index) => {
+        galleryHTML += `<div class="gallery-image ${index === 0 ? 'active' : ''}">
+                          <img src="${image.url}" alt="${image.description}">
+                          <button class="zoom-btn" onclick="openLightbox(${index})">Büyüt</button>
+                       </div>`;
+    });
+    galleryContainer.innerHTML = galleryHTML;
+    updateDescription();
+}
+
+// Açıklamayı güncelle
+function updateDescription() {
+    descriptionContainer.textContent = images[currentImageIndex].description;
+}
+
+// Resmi değiştir
+function changeImage(direction) {
+    const galleryImages = document.querySelectorAll('.gallery-image');
+    galleryImages[currentImageIndex].classList.remove('active');
+    
+    currentImageIndex += direction;
+    
+    if (currentImageIndex >= images.length) {
+        currentImageIndex = 0;
+    } else if (currentImageIndex < 0) {
+        currentImageIndex = images.length - 1;
+    }
+    
+    galleryImages[currentImageIndex].classList.add('active');
+    updateDescription();
+}
+
+// Büyütülmüş resmi aç
+function openLightbox(index) {
+    lightbox.style.display = 'block';
+    lightboxImg.src = images[index].url;
+}
+
+// Büyütülmüş resmi kapat
+function closeLightbox() {
+    lightbox.style.display = 'none';
+}
+
+// Galeriyi başlat
+initializeGallery();
+</script>
+<!-- Resim Galerisi Sonu -->
