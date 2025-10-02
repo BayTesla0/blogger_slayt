@@ -1,0 +1,87 @@
+<!-- PDF Görüntüleyici Başlangıcı (jsDelivr Çözümü) -->
+
+<!-- Gerekli Stil (CSS) Kodları -->
+<style>
+.pdf-viewer { width: 100%; max-width: 700px; margin: 20px auto; border: 2px solid #ccc; box-shadow: 0 4px 10px rgba(0,0,0,0.15); background-color: #f0f0f0; padding: 15px; box-sizing: border-box; font-family: sans-serif; position: relative; min-height: 200px; }
+#pdf-canvas { width: 100%; border: 1px solid #bbb; }
+#loading-message { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; color: #555; background-color: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 10px; display: block; }
+.pdf-controls { display: none; justify-content: space-between; align-items: center; padding: 15px 5px; }
+.pdf-btn { background-color: #007bff; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; user-select: none; }
+.pdf-btn:hover { background-color: #0056b3; }
+.pdf-btn:disabled { background-color: #a0a0a0; cursor: not-allowed; }
+#page-counter { font-size: 18px; font-weight: bold; color: #333; }
+</style>
+
+<!-- Görüntüleyici HTML Yapısı -->
+<div class="pdf-viewer">
+    <div id="loading-message">PDF Yükleniyor, lütfen bekleyin...</div>
+    <canvas id="pdf-canvas"></canvas>
+    <div class="pdf-controls">
+        <button id="prev-page-btn" class="pdf-btn">Geri</button>
+        <span id="page-counter"></span>
+        <button id="next-page-btn" class="pdf-btn">İleri</button>
+    </div>
+</div>
+
+<!-- PDF.js Kütüphanesi (CDN üzerinden) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+
+<!-- PDF Görüntüleyici JavaScript Kodları -->
+<script>
+    // --- GITHUB LİNKİ, JSDELIVR İLE DÖNÜŞTÜRÜLDÜ ---
+    const pdfUrl = 'https://cdn.jsdelivr.net/gh/BayTesla0/blogger_slayt/meroe.pdf';
+
+    const canvas = document.getElementById('pdf-canvas');
+    const loadingMessage = document.getElementById('loading-message');
+    const prevBtn = document.getElementById('prev-page-btn');
+    const nextBtn = document.getElementById('next-page-btn');
+    const pageCounter = document.getElementById('page-counter');
+    const controls = document.querySelector('.pdf-controls');
+    const ctx = canvas.getContext('2d');
+
+    let pdfDoc = null, currentPageNum = 1, totalPages = 0, isPageRendering = false, pageNumPending = null;
+    const scale = 1.5;
+
+    const renderPage = num => {
+        isPageRendering = true;
+        pdfDoc.getPage(num).then(page => {
+            const viewport = page.getViewport({ scale });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            page.render({ canvasContext: ctx, viewport }).promise.then(() => {
+                isPageRendering = false;
+                if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
+            });
+        });
+        pageCounter.textContent = `Sayfa ${num} / ${totalPages}`;
+        updateButtonStates();
+    };
+
+    const queueRenderPage = num => { isPageRendering ? pageNumPending = num : renderPage(num); };
+    const goToPrevPage = () => { if (currentPageNum > 1) { currentPageNum--; queueRenderPage(currentPageNum); } };
+    const goToNextPage = () => { if (currentPageNum < totalPages) { currentPageNum++; queueRenderPage(currentPageNum); } };
+    const updateButtonStates = () => {
+        prevBtn.disabled = (currentPageNum <= 1);
+        nextBtn.disabled = (currentPageNum >= totalPages);
+    };
+
+    prevBtn.addEventListener('click', goToPrevPage);
+    nextBtn.addEventListener('click', goToNextPage);
+    
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js`;
+
+    pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
+        pdfDoc = doc;
+        totalPages = doc.numPages;
+        loadingMessage.style.display = 'none';
+        controls.style.display = 'flex';
+        renderPage(currentPageNum);
+    }).catch(err => {
+        console.error('PDF Yükleme Hatası:', err);
+        canvas.style.display = 'none';
+        controls.style.display = 'none';
+        loadingMessage.textContent = "PDF Yüklenemedi! Dosya GitHub'da 'public' (herkese açık) olarak ayarlanmış olmalıdır.";
+        loadingMessage.style.color = 'red';
+    });
+</script>
+<!-- PDF Görüntüleyici Sonu -->
